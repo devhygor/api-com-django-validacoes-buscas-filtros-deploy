@@ -1,27 +1,27 @@
 from rest_framework import serializers
 from clientes.models import Cliente
+from clientes.validators import *
 
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
         fields = '__all__'
-    
-    def validate_cpf(self, cpf):
-        if len(cpf) != 11:
-            raise serializers.ValidationError('O CPF deve ter 11 dígitos')
-        return cpf
 
-    def validade_nome(self, nome):
-        if not nome.isalpha():
-            raise serializers.ValidationError('Este campo nao pode ter números e nem caracteres especiais')
-        return nome
+    def validate(self, data):
+        errors = {}
 
-    def validade_rg(self, rg):
-        if len(rg) != 9:
-            raise serializers.ValidationError('O RG deve ter 9 dígitos')
-        return rg
+        if not validate_cpf(data['cpf']):
+            errors['cpf'] = "Número de CPF inválido"
 
-    def validade_celular(self, celular):
-        if len(celular) < 11:
-            raise serializers.ValidationError('O número do celular deve ter pelo menos 11 dígitos')
-        return celular
+        if not validade_nome(data['nome']):
+            errors['nome'] = "Não inclua números neste campo"
+
+        if not validade_rg(data['rg']):
+            errors['rg'] = "O RG deve ter 9 dígitos"
+
+        if not validade_celular(data['celular']):
+            errors['celular'] = "O número de celular deve seguir este modelo: 11 91234-1234 (respeitando os espaços e traço)"
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data
